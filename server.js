@@ -40,10 +40,12 @@ app.use('/matchdata',require('./controllers/matchdata'))
 app.use('/players',require('./controllers/players'))
 app.use('/stats',require('./controllers/stats'))
 
+app.use('*',(req,res) => {res.status(200).send('server is on and running')})
+
 /*
 app.use('/',require('./controllers/master'))
 */
 // Listen for Connections
-app.listen(process.env.PORT, () => {
+app.listen(process.env.PORT, '0.0.0.0', () => {
     console.log(`Listening on ${process.env.PORT}`)
 })
