@@ -7,6 +7,7 @@ module.exports = (sequelize, DataTypes) => {
   Session.init({
     session_id: DataTypes.STRING,
     user_id: DataTypes.INTEGER,
+    token: DataTypes.STRING,
     expire_date: DataTypes.DATE,
     active_session: DataTypes.STRING
   }, {

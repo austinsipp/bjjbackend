@@ -8,6 +8,9 @@ module.exports = {
       user_id: {
         type: Sequelize.INTEGER
       },
+      token: {
+        type: Sequelize.STRING
+      },
       expire_date: {
         type: Sequelize.DATE
       },

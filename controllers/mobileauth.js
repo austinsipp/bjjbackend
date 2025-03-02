@@ -9,6 +9,36 @@ const { User, Session } = db
 
 
 /*
+This is for mobile only. It uses json web tokens and sends 
+the token back explicitly. Although often times this is done 
+statelessly through having an access token sent with every 
+request and a refresh token stored securely that gets used to 
+generate new access tokens, I am using a stateful approach 
+where I store session data in a backend session table and 
+heck every api request against this. This eliminates the need 
+for having two tokens and I only send one and it gets checked 
+every time against the initial login created the session so I know 
+exactly which username and password was used to create the 
+token and thus no user can impersonate another. Mobile receives 
+a jwt and client is responsible for storing it securely
+and sending along with api requests. Web receives a 
+cookie and then the middleware will check and if either
+a valid token or valid cookie session is present then the
+user session will be good to go. This is an un-orthodox
+approach since most apps are trying to be stateless in
+their security while this one is not at the current moment. 
+A malicious user could intentionally hit the mobile auth
+route on web but it wouldn't benefit them, their security 
+would simply use jwt instead of cookies. The jwt would expire 
+when the cookie does and every api request is still checked 
+against the backend sessions table to ensure that the session 
+is valid there, so they wouldn't gain anything. If a 
+non-malicious web user accidentally hit this route instead 
+of the web authentication, the only difference is that they 
+would receive the token explicitly and likely wouldnt be able 
+to handle it so they would be redirected to the login screen 
+because they didn't know to pass it back in the api request. 
+
 This route is for verifying the username and password 
 combination given by a user on the login screen.
 It checks the user table and finds the record with
@@ -36,7 +66,7 @@ and they will have safely logged off.
 */
 
 router.post('/', async (req, res) => {
-    console.log("authenticate 1", req.session.session_id)
+    console.log("authenticate 1")
     let user = await User.findOne({
         where: { username: req.body.username }
     })
@@ -48,22 +78,20 @@ router.post('/', async (req, res) => {
         })
     } else {
         console.log("authenticate 3")
-        req.session.user_id = user.user_id
-        let secureSession = await bcrypt.hash(String(new Date() + req.session.user_id), 10)
-        req.session.session_id = secureSession
-        /*const secureSession = await Session.create({
-            session_id: await bcrypt.hash(),
-            user_id: req.session.user_id,
-            expire_date: ,
-            active_session: 'Y'
-        })*/
-        /*currently this is susceptible to SQL injection, need to adjust slightly and make the session id not get sent back and check that the hash of the values that create it match, this way no one can put hacking SQL in*/
-        /*after some thought, I think this is not susceptible to sql injection, because no one will get to this code without a valid login and it is an insert anyways*/
-        await sequelize.query(`insert into public."Sessions" (session_id, user_id, token, expire_date, active_session) values ('${secureSession}', ${req.session.user_id}, NULL, now() + interval '3' hour, 'Y')`)
+        /*req.session.user_id = user.user_id*//*removed since there is no cookie on mobile*/
+        let secureSession = await bcrypt.hash(String(new Date() + user.user_id), 10)
+        /*req.session.session_id = secureSession*//*removed since there is no cookie on mobile*/
+
+
+        const payload = { userId: user.user_id, sessionId: secureSession };
+        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '3h' });
         //req.session.roles = user.roles
         console.log(user.user_id)
-        console.log(user)
-        res.json({ user })
+        /*req.session.token = token*//*removed since there is no cookie on mobile*/
+        /*currently this is susceptible to SQL injection, need to adjust slightly and make the session id not get sent back and check that the hash of the values that create it match, this way no one can put hacking SQL in*/
+        /*after some thought, I think this is not susceptible to sql injection, because no one will get to this code without a valid login and it is an insert anyways*/
+        await sequelize.query(`insert into public."Sessions" (session_id, user_id, token, expire_date, active_session) values ('${secureSession}', ${req.session.user_id}, '${token}', now() + interval '3' hour, 'Y')`)
+        res.json({user: user, token: token})/*send the token back and the user so that the frontend can display based on the user*/
     }
 
 })
@@ -131,9 +159,10 @@ out if they have hit this route and cause that flag to update.
 router.post('/logout', async (req, res) => {
     console.log(req.session)
     console.log(req.currentUser)
+    console.log(req.authToken)
     console.log("logging out")
     /*this shouldnt be susceptible to sql injection because it had to pass through middleware to get here, which was sql injection resistant, but I could also use the sequelize.update method*/
-    await sequelize.query(`update public."Sessions" set active_session = 'N' where user_id = '${req.currentUser.user_id}' and session_id = '${req.session.session_id}'`)
+    await sequelize.query(`update public."Sessions" set active_session = 'N' where user_id = '${req.currentUser.user_id}' and token = '${req.authToken}'`)
     //req.logOut()
     //res.session.expires = '2022-09-09T00:14:27.349Z'
     //req.session.cookie.expires = new Date(0)
