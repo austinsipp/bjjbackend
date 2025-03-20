@@ -24,7 +24,7 @@ CREATE OR REPLACE VIEW public.stats_view
             processed,
             row_number() OVER (ORDER BY 2::integer, 3::integer) AS rownumber
            FROM public."Event"
-          WHERE processed = false AND (event_type::text <> ALL (ARRAY['pause'::character varying::text, 'start match'::character varying::text, 'victory'::character varying::text]))
+          WHERE processed = false AND (event_type::text <> ALL (ARRAY['pause'::character varying::text, 'start match'::character varying::text, 'victory'::character varying::text, 'sweep'::character varying::text]))
           ORDER BY match_id, match_time
         ), 
 		event_w_duration AS (
