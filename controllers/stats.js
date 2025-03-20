@@ -36,11 +36,26 @@ router.get('/', async (req, res) => {
             position_type,
             position_desc
             ;`)
+            let sweepsPieChartData = await sequelize.query(`
+                SELECT 
+                player_id,
+                position_type,
+                position_desc,
+                count(*) 
+                FROM public.stats_view 
+                where created_by = '${req.session.user_id}'
+                and event_after = 'sweep'
+                group by
+                player_id,
+                position_type,
+                position_desc
+                ;`)
         console.log("positionPieChartData:", positionPieChartData)
         /*console.log("submissionPieChartData:", submissionPieChartData)*/
         res.json({
             positionPieChart: positionPieChartData,
-            submissionPieChart: submissionPieChartData
+            submissionPieChart: submissionPieChartData,
+            sweepsPieChart: sweepsPieChartData
         })
     } catch (err) {
         console.log(err)
