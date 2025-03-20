@@ -30,6 +30,7 @@ router.get('/', async (req, res) => {
             FROM public.stats_view 
             where created_by = '${req.session.user_id}'
             and duration = 0
+            and position_desc <> 'sweep'
             group by
             player_id,
             position_type,
