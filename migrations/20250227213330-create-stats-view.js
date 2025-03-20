@@ -12,22 +12,21 @@ module.exports = {
 CREATE OR REPLACE VIEW public.stats_view
  AS
  WITH ordered_events AS (
-         SELECT event_id,
-            match_id,
-            match_time,
-            initiating_player,
-            receiving_player,
-            event_type,
-            event_desc,
-            points_awarded,
-            created_by,
-            processed,
+         SELECT "Event".event_id,
+            "Event".match_id,
+            "Event".match_time,
+            "Event".initiating_player,
+            "Event".receiving_player,
+            "Event".event_type,
+            "Event".event_desc,
+            "Event".points_awarded,
+            "Event".created_by,
+            "Event".processed,
             row_number() OVER (ORDER BY 2::integer, 3::integer) AS rownumber
-           FROM public."Event"
-          WHERE processed = false AND (event_type::text <> ALL (ARRAY['pause'::character varying::text, 'start match'::character varying::text, 'victory'::character varying::text]))
-          ORDER BY match_id, match_time
-        ), 
-		event_w_duration AS (
+           FROM "Event"
+          WHERE "Event".processed = false AND ("Event".event_type::text <> ALL (ARRAY['pause'::character varying::text, 'start match'::character varying::text, 'victory'::character varying::text]))
+          ORDER BY "Event".match_id, "Event".match_time
+        ), event_w_duration AS (
          SELECT t1.event_id,
             t1.match_id,
             t1.match_time,
@@ -39,6 +38,7 @@ CREATE OR REPLACE VIEW public.stats_view
             t1.created_by,
             t1.processed,
             t1.rownumber,
+			t2.event_desc as event_after,
             TRIM(BOTH FROM t2.match_time)::double precision AS end_time,
             TRIM(BOTH FROM t1.match_time)::double precision AS start_time,
                 CASE
@@ -60,6 +60,7 @@ CREATE OR REPLACE VIEW public.stats_view
     t1.event_id,
     'attacker'::text AS position_type,
     t1.event_desc AS position_desc,
+	t1.event_after,
     t1.duration,
     t1.receiving_player AS opponent_id,
     t4.player_name AS opponent_name,
@@ -83,6 +84,7 @@ UNION ALL
     t1.event_id,
     'defender'::text AS position_type,
     t1.event_desc AS position_desc,
+	t1.event_after,
     t1.duration,
     t1.initiating_player AS opponent_id,
     t4.player_name AS opponent_name,
@@ -94,6 +96,11 @@ UNION ALL
      LEFT JOIN "Match" t3 ON t1.match_id = t3.match_id
      LEFT JOIN "Player" t4 ON t1.initiating_player = t4.player_id
   ORDER BY 10;
+
+ALTER TABLE public.stats_view
+    OWNER TO postgres;
+
+
     `);
   },
 
