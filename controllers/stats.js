@@ -10,26 +10,29 @@ router.get('/', async (req, res) => {
         let positionPieChartData = await sequelize.query(`
             SELECT 
             player_id,
-            position_type || ' ' || position_desc as position_desc,
+            position_type,
+            position_desc as position_desc,
             sum(duration)as duration
             FROM public.stats_view 
             where created_by = '${req.session.user_id}'
             and duration <> 0
             group by 
             player_id,
-            position_type || ' ' || position_desc
+            position_type,
+            position_desc
             ;`)
         let submissionPieChartData = await sequelize.query(`
             SELECT 
             player_id,
+            position_type,
             position_desc,
             count(*) 
             FROM public.stats_view 
             where created_by = '${req.session.user_id}'
-            and position_type = 'attacker'
             and duration = 0
             group by
             player_id,
+            position_type,
             position_desc
             ;`)
         console.log("positionPieChartData:", positionPieChartData)
