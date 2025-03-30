@@ -34,13 +34,13 @@ app.use('/authentication',require('./controllers/authentication'))
 */
 
 
-app.use('/',require('./controllers/authentication'))
-app.use('/mobileauth',require('./controllers/mobileauth'))
-app.use('/users',require('./controllers/users'))
-app.use('/matches',require('./controllers/matches'))
-app.use('/matchdata',require('./controllers/matchdata'))
-app.use('/players',require('./controllers/players'))
-app.use('/stats',require('./controllers/stats'))
+app.use('/api',require('./controllers/authentication'))
+app.use('/api/mobileauth',require('./controllers/mobileauth'))
+app.use('/api/users',require('./controllers/users'))
+app.use('/api/matches',require('./controllers/matches'))
+app.use('/api/matchdata',require('./controllers/matchdata'))
+app.use('/api/players',require('./controllers/players'))
+app.use('/api/stats',require('./controllers/stats'))
 
 
 /*
