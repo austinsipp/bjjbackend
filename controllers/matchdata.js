@@ -48,7 +48,7 @@ router.post('/add', async (req, res) => {
                 })
                 console.log(event)
             })
-            res.status(200).json({ redirectTo: '/match' })/*after submitting all the stats for a match, go back to the match creation page*/
+            res.status(200).json({ redirectTo: `${process.env.REDIRECT_URL}` })/*after submitting all the stats for a match, go back to the match creation page*/
         } catch (err) {
             console.log(err)
             res.status(503).json(null)
