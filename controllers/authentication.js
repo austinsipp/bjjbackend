@@ -183,7 +183,7 @@ router.post('/changepassword', async (req, res) => {
             )/*updates the password to the new encrypted password*/
             console.log('got here 3')
             console.log(changed)
-            res.json(changed)
+            res.status(200).json({ status: "Password Changed!", redirectTo: `${process.env.REDIRECT_URL}` })
         }
         catch (err) {
             console.log(err)
